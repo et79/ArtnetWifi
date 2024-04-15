@@ -75,6 +75,7 @@ uint16_t ArtnetWifi::read(void)
       }
       if (opcode == ART_POLL)
       {
+        handlePollRequest();
         return ART_POLL;
       }
       if (opcode == ART_SYNC)
@@ -84,6 +85,15 @@ uint16_t ArtnetWifi::read(void)
   }
 
   return 0;
+}
+
+bool ArtnetWifi::isBroadcast()
+{
+  if (senderIp == localBroadcast){
+    return true;
+  } else {
+    return false;
+  }
 }
 
 uint16_t ArtnetWifi::makePacket(void)
@@ -164,4 +174,18 @@ void ArtnetWifi::printPacketContent(void)
     Serial.print("  ");
   }
   Serial.println('\n');
+}
+
+uint16_t ArtnetWifi::handlePollRequest()
+{
+  if (1 || isBroadcast()) {
+    Udp.beginPacket(senderIp, ARTNET_PORT);
+
+    Udp.write(PollReplyPacket.printPacket(), sizeof(PollReplyPacket.packet));
+    Udp.endPacket();
+
+    return ART_POLL;
+  } else{
+    return 0;
+  }
 }

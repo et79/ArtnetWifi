@@ -44,6 +44,12 @@ THE SOFTWARE.
 #error "Architecture not supported!"
 #endif
 #include <WiFiUdp.h>
+#include "OpCodes.h"
+#include "NodeReportCodes.h"
+#include "StyleCodes.h"
+#include "PriorityCodes.h"
+#include "ProtocolSettings.h"
+#include "PollReply.h"
 
 // UDP specific
 #define ART_NET_PORT 6454
@@ -71,6 +77,7 @@ public:
   int write(void);
   int write(IPAddress ip);
   void setByte(uint16_t pos, uint8_t value);
+  void setIP();
   void printPacketHeader(void);
   void printPacketContent(void);
 
@@ -138,11 +145,31 @@ public:
     return senderIp;
   }
 
+  inline void setIP(IPAddress ip, IPAddress subnetMask)
+  {
+    PollReplyPacket.setIP(ip);
+    localBroadcast = IPAddress((uint32_t)ip | ~(uint32_t)subnetMask);
+  }
+
+  inline void setShortName(const char name[])
+  {
+    PollReplyPacket.setShortName(name);
+  }
+
+  inline void setLongName(const char name[])
+  {
+    PollReplyPacket.setLongName(name);
+  }
+
 private:
+  bool isBroadcast();
   uint16_t makePacket(void);
+  uint16_t handlePollRequest();
 
   WiFiUDP Udp;
+  PollReply PollReplyPacket;
   String host;
+  IPAddress localBroadcast;
   uint8_t artnetPacket[MAX_BUFFER_ARTNET];
   uint16_t packetSize;
   uint16_t opcode;
